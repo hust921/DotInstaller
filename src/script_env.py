@@ -16,6 +16,7 @@ def __detect_os():
     if platform.system() == 'Windows':
         plat = 'windows'
         distro = 'windows'
+        pkgman = 'exit; echo "WIN NOT IMPLEMENTED!"'
 
     # Linux Distrobutions
     elif platform.system() == 'Linux':
@@ -24,21 +25,23 @@ def __detect_os():
         # Arch linux
         if platform.linux_distribution()[0] == 'arch':
             distro = 'arch'
+            pkgman = 'apacman -S'
 
         # Debian
         elif platform.linux_distribution()[0] == 'debian':
             distro = 'debian'
+            pkgman = 'apt-get install'
 
     # Failed to detect os
     else:
         print("ERROR! Failed to detect platform/distro system..")
         exit(2)
 
-    return (plat, distro)
+    return (plat, distro, pkgman)
 
 DOTFILES_DIR = __get_dotfiles_dir()
 SCRIPT_DIR   = __get_script_dir()
 CONFIG_DIR   = os.path.join(SCRIPT_DIR, 'configs')
 SOFTWARE_CONFIGS = os.path.join(CONFIG_DIR, 'software')
 PKG_CONFIGS = os.path.join(CONFIG_DIR, 'pkg')
-PLATFORM, DISTRO = __detect_os()
+PLATFORM, DISTRO, PKGMAN = __detect_os()

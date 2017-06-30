@@ -19,6 +19,9 @@ dependencies:
     - python-scipy
     - vlc
     - w3m
+    - nodejs
+    - npm
+    - cmake
     # --------- AUR ---------
     - dropbox
     - discord

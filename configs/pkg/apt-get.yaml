@@ -14,3 +14,16 @@ dependencies:
     - discord
     - google-chrome
     - typora
+    - git 
+    - curl 
+    - vim 
+    - vim-nox
+    - build-essential 
+    - cmake 
+    - python-dev
+    - python3 
+    - python3-dev
+    - python-pip
+    - nodejs 
+    - npm 
+    - emacs

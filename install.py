@@ -16,7 +16,7 @@ class DepInstaller:
         interactive menu.
         '''
         self.__detect_python_version()
-        self.pkgman = PackageInstaller(DISTRO)
+        self.pkgman = PackageInstaller(DISTRO, PKGMAN)
 
         # Parse software files
         for name in os.listdir(SOFTWARE_CONFIGS):
@@ -37,9 +37,6 @@ class DepInstaller:
         '''Install software/packages using information stored in
         configFile (.yaml full path).
         '''
-        print("--------------------------------")
-        print("[{0}] Installing..".format(name))
-
         with open(configFile, 'r') as f:
             conf = yaml.load(f)
             
@@ -63,8 +60,9 @@ class DepInstaller:
                 # If sorted by distrobution (windows/arch/debian)
                 # And not null
                 deps = conf['dependencies']
-                if DISTRO in conf and conf[DISTRO]:
+                if DISTRO in deps and deps[DISTRO]:
                     deps = deps[DISTRO]
+                    print(deps)
 
                 self.pkgman.install(deps)
 
