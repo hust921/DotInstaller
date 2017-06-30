@@ -1,0 +1,23 @@
+pre-install:
+    windows: null
+    linux:
+        # Link vimfiles
+        - "ln -s vimrc ~/.vimrc"
+        - "ln -s vimfiles ~/vimfiles"
+
+post-install:
+    windows: null
+    linux:
+        # Create vimlocal and install plugins
+        - "touch vimfiles/vimlocal.vim"
+        - "vim +PluginInstall +qall"
+
+        # Compile and install YouCompleteMe
+        - "cd vimfiles/bundle/YouCompleteMe"
+        - "git submodule update --init --recursive"
+        - "./install.py --clang-completer"
+
+dependencies:
+    windows: null
+    arch: [vim, vim-clipboard, ctags, cmake, clang, base-devel, ncurses5-compat-libs, libtinfo]
+    debian: [vim-nox, build-essential, cmake, python-dev, clang, ctags]

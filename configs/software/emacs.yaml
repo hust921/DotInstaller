@@ -1,0 +1,10 @@
+pre-install: null
+post-install:
+    windows: null
+    linux:
+        - "ln -s .emacs ~/.emacs"
+
+dependencies:
+    windows: null
+    arch: [emacs]
+    debian: [emacs]

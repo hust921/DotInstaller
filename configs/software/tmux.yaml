@@ -1,0 +1,13 @@
+pre-install: null
+
+post-install:
+    windows: null
+    linux:
+        # Link tmux config
+        - "ln -s tmux.conf ~/.tmux.conf"
+
+dependencies:
+    windows: null
+    arch: [tmux]
+    debian: [tmux]
+

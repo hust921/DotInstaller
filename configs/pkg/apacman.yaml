@@ -1,0 +1,26 @@
+pre-install:
+    - "pacman -S --needed --asdeps jshon"
+    - "curl -O \"https://raw.githubusercontent.com/oshazard/apacman/master/apacman\""
+    - "bash ./apacman -S apacman"
+    - "apacman -S apacman-deps"
+    - "rm apacman"
+
+post-install: null
+
+apacman:
+    - cups
+    - linux-headers
+    - xorg-server
+    - nvidia
+    - xf86-video-intel
+    - openssh
+    - python-numpy
+    - python-pandas
+    - python-scipy
+    - vlc
+    - w3m
+    # --------- AUR ---------
+    - dropbox
+    - discord
+    - google-chrome
+    - typora

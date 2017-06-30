@@ -1,0 +1,10 @@
+pre-install: null
+post-install:
+    windows: null
+    linux:
+        - "ln -s .gdbinit ~/.gdbinit"
+
+dependencies:
+    windows: null
+    arch: [gdb]
+    debian: [gdb]

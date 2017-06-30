@@ -1,0 +1,16 @@
+pre-install: null
+
+post-install: null
+
+dependencies:
+    - texlive.full
+    - chromium chromium-l10n
+    - cups
+    - xorg-server
+    - openssh
+    - vlc
+    - w3m
+    - dropbox
+    - discord
+    - google-chrome
+    - typora
