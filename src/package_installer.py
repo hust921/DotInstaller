@@ -6,4 +6,6 @@ class PackageInstaller:
 
 
     def install(self, deps):
-        pass
+        # installing deps
+        for d in deps:
+            print("\t[DEP]: {0}".format(d))

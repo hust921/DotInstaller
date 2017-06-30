@@ -8,7 +8,6 @@ from distutils.core import setup
 
 from src.package_installer import PackageInstaller
 from src.script_env import *
-from src.runner import Runner
 
 class DepInstaller:
     def __init__(self):
@@ -17,15 +16,15 @@ class DepInstaller:
         interactive menu.
         '''
         self.__detect_python_version()
-        self.runner = Runner(PLATFORM)
         self.pkgman = PackageInstaller(DISTRO)
 
         # Parse software files
-        for soft in os.listdir(SOFTWARE_CONFIGS):
-            self.__install_software(soft)
+        for name in os.listdir(SOFTWARE_CONFIGS):
+            self.__config_install(name, os.path.join(SOFTWARE_CONFIGS, name))
 
-    def install(self):
-        pass
+        # Parse distro files
+        for name in os.listdir(PKG_CONFIGS):
+            self.__config_install(name, os.path.join(PKG_CONFIGS, name))
 
 
     def __detect_python_version(self):
@@ -34,27 +33,65 @@ class DepInstaller:
             print("Must be using python 3")
             exit(1)
 
-    def __install_software(self, soft):
-        '''Install software using information stored in yaml config
-        file. Passed as: soft
+    def __config_install(self, name, configFile):
+        '''Install software/packages using information stored in
+        configFile (.yaml full path).
         '''
-        with open(os.path.join(SOFTWARE_CONFIGS, soft), 'r') as f:
-            soft = yaml.load(f)
+        print("--------------------------------")
+        print("[{0}] Installing..".format(name))
+
+        with open(configFile, 'r') as f:
+            conf = yaml.load(f)
             
             # Pre-install
-            if soft['pre-install']:
-                self.runner.run(soft['pre-install'][PLATFORM])
+            print("-----\n[{0}] Pre-install..".format(name))
+            # If any pre-install cmds/instructions
+            if 'pre-install' in conf and conf['pre-install']:
+
+                # If sorted by platform (windows/linux) and not null
+                cmds = conf['pre-install']
+                if PLATFORM in conf['pre-install']:
+                    cmds = cmds[PLATFORM]
+
+                self.__run(cmds)
 
             # Install pakages
-            if soft['dependencies']:
-                self.pkgman.install(soft['dependencies'][DISTRO])
+            print("-----\n[{0}] Dependencies..".format(name))
+            # If any dependencies
+            if 'dependencies' in conf and conf['dependencies']:
+                
+                # If sorted by distrobution (windows/arch/debian)
+                # And not null
+                deps = conf['dependencies']
+                if DISTRO in conf and conf[DISTRO]:
+                    deps = deps[DISTRO]
+
+                self.pkgman.install(deps)
 
             # Post-install
-            if soft['post-install']:
-                self.runner.run(soft['post-install'][PLATFORM])
+            print("-----\n[{0}] Post-install..".format(name))
+            # If any post-install cmds/instructions
+            if 'post-install' in conf and conf['post-install']:
+
+                # If sorted by platform (windows/linux) and not null
+                cmds = conf['post-install']
+                if PLATFORM in conf['post-install']:
+                    cmds = cmds[PLATFORM]
+
+                self.__run(cmds)
+    
+
+    def __run(self, cmds):
+        # Determine if declared by distro
+        if DISTRO in cmds:
+            cmds = cmds[DISTRO]
+
+        # Execute cmds
+        for cmd in cmds:
+            print("\t[CMD]: {0}".format(cmd))
+
 
 
 
 if __name__ == '__main__':
     installer = DepInstaller()
-    installer.install()
