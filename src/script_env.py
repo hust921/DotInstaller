@@ -25,23 +25,25 @@ def __detect_os():
         # Arch linux
         if platform.linux_distribution()[0] == 'arch':
             distro = 'arch'
-            pkgman = 'apacman -S'
+            pkgman = 'apacman'
+            options = '-S'
 
         # Debian
         elif platform.linux_distribution()[0] == 'debian':
             distro = 'debian'
-            pkgman = 'apt-get install'
+            pkgman = 'apt-get'
+            options = 'install'
 
     # Failed to detect os
     else:
         print("ERROR! Failed to detect platform/distro system..")
         exit(2)
 
-    return (plat, distro, pkgman)
+    return (plat, distro, pkgman, options)
 
 DOTFILES_DIR = __get_dotfiles_dir()
 SCRIPT_DIR   = __get_script_dir()
 CONFIG_DIR   = os.path.join(SCRIPT_DIR, 'configs')
 SOFTWARE_CONFIGS = os.path.join(CONFIG_DIR, 'software')
 PKG_CONFIGS = os.path.join(CONFIG_DIR, 'pkg')
-PLATFORM, DISTRO, PKGMAN = __detect_os()
+PLATFORM, DISTRO, PKGMAN, PKGMAN_OPTIONS = __detect_os()
