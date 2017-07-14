@@ -14,11 +14,11 @@ class MenuEntry:
         self.exspanded = False
 
     def add_dependency(self, dep, selected=True):
-        self.__deps.append((selected, dep))
+        self.__deps.append({'selected': selected, 'name': dep})
 
     def add_dependencies(self, deps, selected=True):
         for dep in deps:
-            self.__deps.append((selected, dep))
+            self.__deps.append({'selected': selected, 'name': dep})
 
     def remove_dependency(self, dep):
         self.__deps.remove(dep)
@@ -28,14 +28,6 @@ class MenuEntry:
 
     def n_dependencies(self):
         return len(self.__deps)
-
-    def change_select(self, dep, selected=None):
-        for i, d in enumerate(self.__deps):
-            if d == dep:
-
-                if selected is None:
-                    selected = not dep[0]
-                self.__deps[i] = (selected, dep[1])
 
 
 class Menu:
@@ -88,8 +80,8 @@ class Menu:
             dependencies = []
             for e in self.__entries:
                 for d in e.get_dependencies():
-                    if d[0]:
-                        dependencies.append(d[1])
+                    if d['selected']:
+                        dependencies.append(d['name'])
 
             return dependencies
         else:
@@ -111,13 +103,20 @@ class Menu:
         # Draw options
         self.stdscr.addstr(1, 5, "Distro: " + DISTRO)
         self.stdscr.addstr(1, 45, "(q)uit")
+        self.stdscr.addstr(1, 65, "(e)xspand")
         self.stdscr.addstr(2, 5, "Platform: " + PLATFORM)
         self.stdscr.addstr(2, 45, "(i)nstall")
         self.stdscr.addstr(3, 5, "pkg-man: " + PKGMAN + " "+ PKGMAN_OPTIONS)
         self.stdscr.addstr(3, 45, "(s)elect")
 
+        # Refresh menu
+        self.__refresh_menu()
+
+
+    def __refresh_menu(self):
+        self.__menu_lower = self.__menu_upper-1
         # Add menu entries
-        line = self.y
+        line = self.__menu_upper
         for entry in self.__entries:
             sep = "-" * int((curses.COLS/2) - len(entry.text) - 5)
             msg = "[{1}] {0} {2}\n".format(entry.text, xselect(entry.selected), sep)
@@ -125,33 +124,18 @@ class Menu:
             self.__menu_lower += 1
             line += 1
 
-            # Add dependencies
             if entry.exspanded:
-                for (selected, dep) in entry.get_dependencies():
+                # Add dependencies
+                for dep in entry.get_dependencies():
                     if (line < curses.LINES-1):
-                        self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep, xselect(selected)))
+                        self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep['name'], xselect(dep['selected'])))
                         self.__menu_lower += 1
                         line += 1
 
-        self.stdscr.refresh()
-        self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
-        self.stdscr.move(self.y, self.x)
-
-    def __refresh_menu(self):
-        # Add menu entries
-        line = self.__menu_upper
-        for entry in self.__entries:
-            sep = "-" * int((curses.COLS/2) - len(entry.text) - 5)
-            msg = "[{1}] {0} {2}\n".format(entry.text, xselect(entry.selected), sep)
-            self.stdscr.addstr(line, 0, msg)
+        # Clear lines after menu
+        while (line < curses.LINES-1):
+            self.stdscr.addstr(line, 0, ' '*curses.COLS)
             line += 1
-
-            if entry.exspanded:
-                # Add dependencies
-                for (selected, dep) in entry.get_dependencies():
-                    if (line < curses.LINES-1):
-                        self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep, xselect(selected)))
-                        line += 1
 
         self.stdscr.refresh()
         self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
@@ -188,13 +172,57 @@ class Menu:
                 return True
 
             elif key == 's' or key == ' ':
-                self.__change_select(self.y - self.__menu_upper)
+                entry = self.__entry_under_cursor()
+                
+                # Change all dependencies
+                if (type(entry) is MenuEntry):
+                    entry.selected = not entry.selected
+                    for d in entry.get_dependencies():
+                        d['selected'] = entry.selected
+                # Change dependency
+                else:
+                    entry['selected'] = not entry['selected']
+                self.__refresh_menu()
 
             elif key == 'e':
                 # Find entry selected
+                entry = self.__entry_under_cursor()
+
                 # Change exspanded/collapsed
-                print("NOT IMPLEMENTED YET!!")
-                return False
+                if (type(entry) is MenuEntry):
+                    entry.exspanded = not entry.exspanded
+                    self.__refresh_menu()
+
+
+    def __entry_under_cursor(self):
+        '''Returns MenuEntry for menu entry
+        or (selected, dep) for dependency
+        under the cursor.
+        '''
+        i = 0
+        n = self.y - self.__menu_upper
+
+        # Loop main menu entries
+        for e in self.__entries:
+            # If cursor is beyond a main menu entry,
+            # skip entire entry. (only count if expanded)
+            if n > i + e.n_dependencies() and e.exspanded:
+                i += e.n_dependencies()
+
+            # If main entry return
+            elif n == i:
+                return e
+
+            # Else dependency of current (main menu) entry was selected.
+            # (only count if expanded)
+            elif e.exspanded:
+                for d in e.get_dependencies():
+                    i += 1
+                    if i == n:
+                        return d
+            i += 1
+        raise Exception("Failed to find menu entry or dependency selected.\
+                In Menu.__entry_under_cursor()")
 
 
     def __move_cursor(self, y, x):
@@ -202,36 +230,6 @@ class Menu:
         self.y = y
         self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
         self.stdscr.move(self.y, self.x)
-
-
-    def __change_select(self, n):
-        i = 0
-        # Loop main menu entries
-        for e in self.__entries:
-
-            # If main entry is selected. "select" all dependencies.
-            if n == i:
-                e.selected = not e.selected
-                for d in e.get_dependencies():
-                    e.change_select(d, selected=e.selected)
-                    i += 1
-                self.__refresh_menu()
-                return
-
-            # If selected is beyond main menu entry, skip entire enty. (only count if expanded)
-            elif n > i + e.n_dependencies() and e.exspanded:
-                i += e.n_dependencies()
-
-            # Else dependency of current entry was selected. (only count if expanded)
-            elif e.exspanded:
-                for d in e.get_dependencies():
-                    i += 1
-                    if i == n:
-                        e.change_select(d)
-                        self.__refresh_menu()
-                        return
-            i += 1
-
 
 
     def __get_menu_entries(self):
