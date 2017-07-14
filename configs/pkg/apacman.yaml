@@ -22,6 +22,10 @@ dependencies:
     - nodejs
     - npm
     - cmake
+    - ghc
+    - ghc-mod
+    - haskell-haddock-library
+    - haskell-haddock-api
     # --------- AUR ---------
     - dropbox
     - discord

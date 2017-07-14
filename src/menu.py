@@ -11,6 +11,7 @@ class MenuEntry:
         self.text = text
         self.selected = selected
         self.__deps = []
+        self.exspanded = False
 
     def add_dependency(self, dep, selected=True):
         self.__deps.append((selected, dep))
@@ -71,7 +72,6 @@ class Menu:
         self.__entries.remove(entry)
 
 
-
     def show_menu(self):
         # Init curses
         self.__curses_init()
@@ -126,10 +126,12 @@ class Menu:
             line += 1
 
             # Add dependencies
-            for (selected, dep) in entry.get_dependencies():
-                self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep, xselect(selected)))
-                self.__menu_lower += 1
-                line += 1
+            if entry.exspanded:
+                for (selected, dep) in entry.get_dependencies():
+                    if (line < curses.LINES-1):
+                        self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep, xselect(selected)))
+                        self.__menu_lower += 1
+                        line += 1
 
         self.stdscr.refresh()
         self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
@@ -144,10 +146,12 @@ class Menu:
             self.stdscr.addstr(line, 0, msg)
             line += 1
 
-            # Add dependencies
-            for (selected, dep) in entry.get_dependencies():
-                self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep, xselect(selected)))
-                line += 1
+            if entry.exspanded:
+                # Add dependencies
+                for (selected, dep) in entry.get_dependencies():
+                    if (line < curses.LINES-1):
+                        self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep, xselect(selected)))
+                        line += 1
 
         self.stdscr.refresh()
         self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
@@ -159,51 +163,69 @@ class Menu:
         while True:
             key = stdscr.getkey()
 
-            if key == 'q':
+            # g/G vim bindings
+            if key == 'g':
+                key = stdscr.getkey()
+                if key == 'g':
+                    self.__move_cursor(self.__menu_upper, self.x)
+
+            if (key == 'G'):
+                    self.__move_cursor(self.__menu_lower, self.x)
+
+            # Regular keybindings
+            elif key == 'q':
                 return False
 
             # Up key AND inside menu window bounds
             elif (key == 'KEY_UP' or key == 'k') and self.y > self.__menu_upper:
-                self.stdscr.chgat(self.y, 0, curses.A_NORMAL)
-                self.y -= 1
-                self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
-                self.stdscr.move(self.y, self.x)
+                self.__move_cursor(self.y-1, self.x)
 
             # Down key AND inside menu window bounds
             elif (key == 'KEY_DOWN' or key == 'j') and self.y < self.__menu_lower:
-                self.stdscr.chgat(self.y, 0, curses.A_NORMAL)
-                self.y += 1
-                self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
-                self.stdscr.move(self.y, self.x)
+                self.__move_cursor(self.y+1, self.x)
 
             elif key == 'i':
                 return True
 
-            elif key == 's':
+            elif key == 's' or key == ' ':
                 self.__change_select(self.y - self.__menu_upper)
+
+            elif key == 'e':
+                # Find entry selected
+                # Change exspanded/collapsed
+                print("NOT IMPLEMENTED YET!!")
+                return False
+
+
+    def __move_cursor(self, y, x):
+        self.stdscr.chgat(self.y, 0, curses.A_NORMAL)
+        self.y = y
+        self.stdscr.chgat(self.y, 0, curses.A_STANDOUT)
+        self.stdscr.move(self.y, self.x)
 
 
     def __change_select(self, n):
         i = 0
-        f = open("installer.log", 'a+')
+        # Loop main menu entries
         for e in self.__entries:
+
+            # If main entry is selected. "select" all dependencies.
             if n == i:
                 e.selected = not e.selected
                 for d in e.get_dependencies():
-                    f.write("({0}) (i:{1}) found it\n".format(n, i))
                     e.change_select(d, selected=e.selected)
                     i += 1
                 self.__refresh_menu()
                 return
 
-            elif n > i + e.n_dependencies():
-                f.write("({0}) (i:{1}) not yet\n".format(n, i))
+            # If selected is beyond main menu entry, skip entire enty. (only count if expanded)
+            elif n > i + e.n_dependencies() and e.exspanded:
                 i += e.n_dependencies()
 
-            else:
+            # Else dependency of current entry was selected. (only count if expanded)
+            elif e.exspanded:
                 for d in e.get_dependencies():
                     i += 1
-                    f.write("({0}) (i:{1}) inside\n".format(n, i))
                     if i == n:
                         e.change_select(d)
                         self.__refresh_menu()

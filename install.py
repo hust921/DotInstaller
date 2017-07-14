@@ -124,4 +124,4 @@ class DepInstaller:
 
 
 if __name__ == '__main__':
-    installer = DepInstaller()
+    DepInstaller()

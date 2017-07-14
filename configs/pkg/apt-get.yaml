@@ -27,3 +27,5 @@ dependencies:
     - nodejs 
     - npm 
     - emacs
+    - ghc
+    - ghc-mod
