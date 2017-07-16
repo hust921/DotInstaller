@@ -7,16 +7,16 @@ def xselect(selected):
     return 'x' if selected else ' '
 
 class MenuEntry:
-    def __init__(self, text, selected=True):
+    def __init__(self, text, selected=False):
         self.text = text
         self.selected = selected
         self.__deps = []
         self.exspanded = False
 
-    def add_dependency(self, dep, selected=True):
+    def add_dependency(self, dep, selected=False):
         self.__deps.append({'selected': selected, 'name': dep})
 
-    def add_dependencies(self, deps, selected=True):
+    def add_dependencies(self, deps, selected=False):
         for dep in deps:
             self.__deps.append({'selected': selected, 'name': dep})
 
@@ -36,7 +36,7 @@ class Menu:
 
     def __init__(self):
         self.__entries = []
-        # Cursor possition
+        self.__offset = 0
 
 
     def add_menu_entry(self, menuEntry):
@@ -112,25 +112,32 @@ class Menu:
         # Refresh menu
         self.__refresh_menu()
 
+    def __print_mentry(self, line, entry):
+        '''Prints MenuEntry to the screen and addjust counting variables.'''
+        sep = "-" * int((curses.COLS/2) - len(entry.text) - 5)
+        msg = "[{1}] {0} {2}\n".format(entry.text, xselect(entry.selected), sep)
+        self.stdscr.addstr(line, 0, msg)
+        self.__menu_lower += 1
 
     def __refresh_menu(self):
         self.__menu_lower = self.__menu_upper-1
         # Add menu entries
         line = self.__menu_upper
+        i_entry = 0
         for entry in self.__entries:
-            sep = "-" * int((curses.COLS/2) - len(entry.text) - 5)
-            msg = "[{1}] {0} {2}\n".format(entry.text, xselect(entry.selected), sep)
-            self.stdscr.addstr(line, 0, msg)
-            self.__menu_lower += 1
-            line += 1
+            if (line < curses.LINES-1) and i_entry >= self.__offset:
+                self.__print_mentry(line, entry)
+                line += 1
+            i_entry += 1
 
+            # Add dependencies
             if entry.exspanded:
-                # Add dependencies
                 for dep in entry.get_dependencies():
-                    if (line < curses.LINES-1):
+                    if (line < curses.LINES-1) and i_entry >= self.__offset:
                         self.stdscr.addstr(line, 0, "\t[{1}] {0}\n".format(dep['name'], xselect(dep['selected'])))
                         self.__menu_lower += 1
                         line += 1
+                    i_entry += 1
 
         # Clear lines after menu
         while (line < curses.LINES-1):
@@ -161,12 +168,14 @@ class Menu:
                 return False
 
             # Up key AND inside menu window bounds
-            elif (key == 'KEY_UP' or key == 'k') and self.y > self.__menu_upper:
-                self.__move_cursor(self.y-1, self.x)
+            elif (key == 'KEY_UP' or key == 'k'):
+                if not self.__scroll(up=True) and self.y > self.__menu_upper:
+                    self.__move_cursor(self.y-1, self.x)
 
             # Down key AND inside menu window bounds
-            elif (key == 'KEY_DOWN' or key == 'j') and self.y < self.__menu_lower:
-                self.__move_cursor(self.y+1, self.x)
+            elif (key == 'KEY_DOWN' or key == 'j'):
+                if not self.__scroll(up=False) and self.y < self.__menu_lower:
+                    self.__move_cursor(self.y+1, self.x)
 
             elif key == 'i':
                 return True
@@ -193,6 +202,25 @@ class Menu:
                     entry.exspanded = not entry.exspanded
                     self.__refresh_menu()
 
+    def __scroll(self, up=False):
+        '''Scrolls the screen'''
+        # If trying to scroll up and at top of screen
+        if up and self.y == self.__menu_upper and self.__offset > 0:
+            change = -1 
+
+        # If trying to scroll down at at bottom of screnn
+        elif not up and self.y == self.__menu_lower:
+            change = 1
+
+        # Else: do nothing
+        else:
+            change = 0
+
+        self.__offset += change
+        self.__refresh_menu()
+
+        return change != 0
+
 
     def __entry_under_cursor(self):
         '''Returns MenuEntry for menu entry
@@ -200,7 +228,7 @@ class Menu:
         under the cursor.
         '''
         i = 0
-        n = self.y - self.__menu_upper
+        n = (self.y - self.__menu_upper) + self.__offset
 
         # Loop main menu entries
         for e in self.__entries:
