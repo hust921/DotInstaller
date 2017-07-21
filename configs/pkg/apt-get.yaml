@@ -4,6 +4,8 @@ post-install: null
 
 dependencies:
     - texlive.full
+    - texstudio
+    - pandoc
     - chromium chromium-l10n
     - cups
     - xorg-server

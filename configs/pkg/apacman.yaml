@@ -8,6 +8,8 @@ pre-install:
 post-install: null
 
 dependencies:
+    - texstudio
+    - pandoc
     - cups
     - linux-headers
     - xorg-server
