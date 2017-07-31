@@ -1,0 +1,41 @@
+platform: linux
+distro: arch
+
+pre-install:
+    linux:
+    - "pacman -S --needed --asdeps jshon"
+    - "curl -O \"https://raw.githubusercontent.com/oshazard/apacman/master/apacman\""
+    - "bash ./apacman -S apacman"
+    - "apacman -S apacman-deps"
+    - "rm apacman"
+
+post-install:
+    linux: []
+
+dependencies:
+    arch:
+        - texstudio
+        - pandoc
+        - cups
+        - linux-headers
+        - xorg-server
+        - nvidia
+        - xf86-video-intel
+        - openssh
+        - python-numpy
+        - python-pandas
+        - python-scipy
+        - vlc
+        - w3m
+        - nodejs
+        - npm
+        - cmake
+        - ghc
+        - ghc-mod
+        - haskell-haddock-library
+        - haskell-haddock-api
+        # --------- AUR ---------
+        - dropbox
+        - discord
+        - google-chrome
+        - typora

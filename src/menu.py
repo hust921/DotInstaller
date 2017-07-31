@@ -77,13 +77,18 @@ class Menu:
 
         # Collect dependencies if not cancelled
         if install:
-            dependencies = []
+            ret = {}
+            ret['software'] = []
+            ret['dependencies'] = []
+
             for e in self.__entries:
+                if e.selected:
+                    ret['software'].append(e.text)
                 for d in e.get_dependencies():
                     if d['selected']:
-                        dependencies.append(d['name'])
+                        ret['dependencies'].append(d['name'])
 
-            return dependencies
+            return ret
         else:
             return None
 

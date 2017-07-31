@@ -1,7 +1,9 @@
-pre-install: null
+platform: linux
+
+pre-install:
+    linux: []
 
 post-install:
-    windows: null
     linux:
         # Download and install oh-my-zsh
         - "sh -c \"$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)\""
@@ -12,6 +14,5 @@ post-install:
         - "~/.fzf/install"
 
 dependencies:
-    windows: null
     arch: [zsh, screenfetch, curl]
     debian: [zsh, screenfetch, curl]

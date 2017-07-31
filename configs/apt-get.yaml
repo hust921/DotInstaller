@@ -1,0 +1,40 @@
+platform: linux
+distro: debian
+
+
+pre-install:
+    linux: []
+
+post-install:
+    linux: []
+
+dependencies:
+    debian:
+        - texlive.full
+        - texstudio
+        - pandoc
+        - chromium chromium-l10n
+        - cups
+        - xorg-server
+        - openssh
+        - vlc
+        - w3m
+        - dropbox
+        - discord
+        - google-chrome
+        - typora
+        - git 
+        - curl 
+        - vim 
+        - vim-nox
+        - build-essential 
+        - cmake 
+        - python-dev
+        - python3 
+        - python3-dev
+        - python-pip
+        - nodejs 
+        - npm 
+        - emacs
+        - ghc
+        - ghc-mod

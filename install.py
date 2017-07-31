@@ -19,39 +19,55 @@ class DepInstaller:
         self.__detect_python_version()
         self.pkgman = PackageInstaller(DISTRO, PKGMAN)
         menu = Menu()
+        configs = {}
 
         # Parse software files
-        for name in os.listdir(SOFTWARE_CONFIGS):
+        for name in os.listdir(CONFIG_PATH):
             name = name.replace('.yaml', '')
-            menu_soft = menu.add_menu_entry(MenuEntry(name))
-            packages = self.parse_soft_config(name)['dependencies']
-            menu_soft.add_dependencies(packages)
+            config = self.parse_config(name)
+            if config is not None:
+                configs[name] = config
+                menu_soft = menu.add_menu_entry(MenuEntry(name))
+                menu_soft.add_dependencies(config['dependencies'])
 
-
-        # Parse distro files
-        menu_pkg = menu.add_menu_entry(MenuEntry("{0} ({1}):".format(str(DISTRO), str(PKGMAN))))
-        for name in os.listdir(PKG_CONFIGS):
-            name = name.replace('.yaml', '')
-            if name == PKGMAN:
-                packages = self.parse_pkg_config(name)['dependencies']
-                menu_pkg.add_dependencies(packages)
-
-        packages = menu.show_menu()
-        if packages is None:
+        # Show menu and question user for install
+        menu_selection = menu.show_menu()
+        if menu_selection is None:
             print("Quit. Nothing changed")
-        else:
-            print("Following packages will be installed: {0}".format(packages))
+            exit(0)
 
-            while True:
-                answer = input("Are you sure? [yes/No]: ") 
+        # Ask for dependencies
+        print("Following packages will be installed: {0}".format(menu_selection['dependencies']))
 
-                if answer == 'yes':
-                    print("--------------------------------INSTALLING!--------------------------------")
-                    return
+        if input("Are you sure? [yes/No]: ") != 'yes':
+            print("Installation cancelled. Nothing changed.")
+            return
 
-                elif answer.lower() == 'no' or answer.lower() == 'n':
+        # Ask for pre/post install edits
+        for softname in menu_selection['software']:
+            quit = False
+            while not quit:
+                print("\nInstall scripts [{0}]:".format(softname))
+                print("\t1) Pre-Install")
+                print("\t2) Post-Install")
+                print("\t3) Continue")
+                print("\t9) Cancel installation")
+            
+                choice = input("\n: ")
+                if choice == "1":
+                    print("NOT IMPLEMENTED!!!")
+                    print("EDIT Pre-Install of: {0}, for debugging: {1}".format(softname, configs[softname]["pre-install"]))
+                elif choice == "2":
+                    print("NOT IMPLEMENTED!!!")
+                    print("EDIT Post-Install of: {0}, for debugging: {1}".format(softname, configs[softname]["post-install"]))
+                elif choice == "3":
+                    quit = True
+                elif choice == "9":
                     print("Installation cancelled. Nothing changed.")
-                    return
+                    exit(0)
+
+        # Installation
+        print("--------------------------------INSTALLING!--------------------------------")
 
 
     def __detect_python_version(self):
@@ -60,55 +76,41 @@ class DepInstaller:
             print("Must be using python 3")
             exit(1)
 
-
-    def parse_pkg_config(self, name):
-        pkg = {}
-        fpath = os.path.join(PKG_CONFIGS, name) + '.yaml'
+    def parse_config(self, name):
+        config = {}
+        # Open file for parsing
+        fpath = os.path.join(CONFIG_PATH, name) + '.yaml'
         with open(fpath, 'r') as f:
             conf = yaml.load(f)
 
-        # Pre-install
-        if 'pre-install' in conf and conf['pre-install']:
-            pkg['pre-install'] = conf['pre-install']
-
-        # Post-install
-        if 'post-install' in conf and conf['post-install']:
-            pkg['post-install'] = conf['post-install']
-
-        # Dependencies
-        if 'dependencies' in conf and conf['dependencies']:
-            pkg['dependencies'] = conf['dependencies']
-
-        return pkg
-
-
-    def parse_soft_config(self, name):
-        soft = {}
-        fpath = os.path.join(SOFTWARE_CONFIGS, name) + '.yaml'
-        with open(fpath, 'r') as f:
-            conf = yaml.load(f)
+        # If platform is specified, but not current one
+        if 'platform' in conf and conf['platform'] != PLATFORM:
+            return None
+        # If distro is specified, but not current one
+        if 'distro' in conf and conf['distro'] != DISTRO:
+            return None
 
         # Pre-install
         if 'pre-install' in conf and conf['pre-install']:
             # If sorted by platform (windows/linux) and not null
             if PLATFORM in conf['pre-install']:
-                soft['pre-install'] = conf['pre-install'][PLATFORM]
+                config['pre-install'] = conf['pre-install'][PLATFORM]
 
 
         # Post-install
         if 'post-install' in conf and conf['post-install']:
             # If sorted by platform (windows/linux) and not null
             if PLATFORM in conf['post-install']:
-                soft['post-install'] = conf['post-install'][PLATFORM]
+                config['post-install'] = conf['post-install'][PLATFORM]
 
 
         # Install pakages
         if 'dependencies' in conf and conf['dependencies']:
             # If sorted by distrobution (windows/arch/debian)
             if DISTRO in conf['dependencies'] and conf['dependencies'][DISTRO]:
-                soft['dependencies'] = conf['dependencies'][DISTRO]
+                config['dependencies'] = conf['dependencies'][DISTRO]
 
-        return soft
+        return config
 
 
     def __run(self, cmds):

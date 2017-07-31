@@ -1,12 +1,12 @@
 pre-install:
-    windows: null
+    windows: []
     linux:
         # Link vimfiles
         - "ln -s vimrc ~/.vimrc"
         - "ln -s vimfiles ~/vimfiles"
 
 post-install:
-    windows: null
+    windows: []
     linux:
         # Create vimlocal and install plugins
         - "touch vimfiles/vimlocal.vim"

@@ -43,7 +43,5 @@ def __detect_os():
 
 DOTFILES_DIR = __get_dotfiles_dir()
 SCRIPT_DIR   = __get_script_dir()
-CONFIG_DIR   = os.path.join(SCRIPT_DIR, 'configs')
-SOFTWARE_CONFIGS = os.path.join(CONFIG_DIR, 'software')
-PKG_CONFIGS = os.path.join(CONFIG_DIR, 'pkg')
+CONFIG_PATH   = os.path.join(SCRIPT_DIR, 'configs')
 PLATFORM, DISTRO, PKGMAN, PKGMAN_OPTIONS = __detect_os()

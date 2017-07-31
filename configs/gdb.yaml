@@ -1,10 +1,13 @@
-pre-install: null
+pre-install:
+    windows: []
+    linux: []
+
 post-install:
-    windows: null
+    windows: []
     linux:
         - "ln -s .gdbinit ~/.gdbinit"
 
 dependencies:
-    windows: null
+    windows: []
     arch: [gdb]
     debian: [gdb]

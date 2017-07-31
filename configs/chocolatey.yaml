@@ -1,0 +1,11 @@
+platform: windows
+distro: windows
+
+pre-install:
+    windows: []
+
+post-install:
+    windows: []
+
+dependencies:
+    windows: []
