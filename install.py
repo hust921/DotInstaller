@@ -8,6 +8,7 @@ from distutils.core import setup
 
 from src.package_installer import PackageInstaller
 from src.script_env import *
+from src.script_editor import ScriptEditor
 from src.menu import Menu, MenuEntry
 
 class DepInstaller:
@@ -43,31 +44,20 @@ class DepInstaller:
             print("Installation cancelled. Nothing changed.")
             return
 
+        # Find configs for selected software in menu
+        selected_confs = {}
+        for soft in menu_selection['software']:
+            selected_confs[soft] = configs[soft]
+
         # Ask for pre/post install edits
-        for softname in menu_selection['software']:
-            quit = False
-            while not quit:
-                print("\nInstall scripts [{0}]:".format(softname))
-                print("\t1) Pre-Install")
-                print("\t2) Post-Install")
-                print("\t3) Continue")
-                print("\t9) Cancel installation")
-            
-                choice = input("\n: ")
-                if choice == "1":
-                    print("NOT IMPLEMENTED!!!")
-                    print("EDIT Pre-Install of: {0}, for debugging: {1}".format(softname, configs[softname]["pre-install"]))
-                elif choice == "2":
-                    print("NOT IMPLEMENTED!!!")
-                    print("EDIT Post-Install of: {0}, for debugging: {1}".format(softname, configs[softname]["post-install"]))
-                elif choice == "3":
-                    quit = True
-                elif choice == "9":
-                    print("Installation cancelled. Nothing changed.")
-                    exit(0)
+        sedit = ScriptEditor()
+        sedit.show_menu(selected_confs)
 
         # Installation
         print("--------------------------------INSTALLING!--------------------------------")
+        print(menu_selection['dependencies'])
+        print("----")
+        print(selected_confs)
 
 
     def __detect_python_version(self):
